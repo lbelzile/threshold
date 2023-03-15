@@ -1,0 +1,6 @@
+exportPattern("^[[:alpha:]]+")
+importFrom("graphics", "abline", "lines", "rug")
+importFrom("methods", "formalArgs")
+importFrom("stats", "arima.sim", "coef", "ecdf", "lm", "nobs", "pnorm",
+           "ppoints", "qexp", "qnorm", "qt", "quantile", "rexp",
+           "rnorm", "rt", "runif", "sd", "vcov", "weighted.mean")

@@ -2,8 +2,7 @@
 % Please edit documentation in R/SKK.R
 \name{sihs}
 \alias{sihs}
-\title{Smooth inverse Hill stat
-Threshold selection via smooth inverse Hill statistic using \code{eBsc} nonparametric smoothing. As the latter is computationally intensive, it is recommended to limit the number of order statistics considered}
+\title{Smooth inverse Hill threshold selection}
 \usage{
 sihs(data, maxk = 500L)
 }
@@ -21,7 +20,6 @@ a list with components
 }
 }
 \description{
-Smooth inverse Hill stat
 Threshold selection via smooth inverse Hill statistic using \code{eBsc} nonparametric smoothing. As the latter is computationally intensive, it is recommended to limit the number of order statistics considered
 }
 \references{

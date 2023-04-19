@@ -1,5 +1,6 @@
 
-#' Smooth inverse Hill stat
+#' Smooth inverse Hill threshold selection
+#'
 #' Threshold selection via smooth inverse Hill statistic using \code{eBsc} nonparametric smoothing. As the latter is computationally intensive, it is recommended to limit the number of order statistics considered
 #'
 #' @references Schneider, L.F., Krajina, A. & Krivobokova, T. (2021). \emph{Threshold selection in univariate extreme value analysis}, Extremes, \bold{24}, 881–913 \url{https://doi.org/10.1007/s10687-021-00405-7}

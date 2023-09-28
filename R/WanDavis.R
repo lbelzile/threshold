@@ -15,7 +15,7 @@
 #' @references Wan, P. and R.A. Davis (2018), \emph{Threshold selection for multivariate heavy-tailed data}, Extremes \bold{22}(1), pp. 131-166.
 #' @param dat (matrix) an \code{n} by \code{p} matrix of observations
 #' @param thresh (vector) probability levels for quantiles
-#' @param norm (string) one of componentwise-projection (\code{proj}) or \code{lp} norm
+#' @param norm (string) one of componentwise-projection (\code{proj}), \code{min}, \code{max} or \code{lp} norm
 #' @param int (integer) the index of the component if \code{norm='proj'}, or the exponent of the \code{lp} norm. \code{Inf} returns the maximum component.
 #' @param B number of bootstrap replications for each thresholds
 #' @param margtransfo (string) marginal distribution, either generalized Pareto above zero (\code{Pareto}) or unit Frechet (\code{Frechet})
@@ -23,7 +23,7 @@
 #' @param plot (logical) if \code{TRUE} (default), produce a plot of the p-value path
 WD.diag <- function(dat,
          thresh,
-         norm = c("proj","lp", "max", "min"),
+         norm = c("lp","proj", "max", "min"),
          int = 1L,
          B = 999L,
          margtransfo = c("Pareto","Frechet"),
@@ -55,7 +55,7 @@ WD.diag <- function(dat,
   if(margtransfo == "Pareto"){
   pseudo <- 1/(1-apply(dat, 2, rank, ties.method = ties.method)/(nrow(dat) + 1L)) - 1
   } else if(margtransfo == "Frechet"){
-    pseudo <- -1/log(runif(apply(dat, 2, rank, ties.method = ties.method)/(nrow(dat) + 1L)))
+    pseudo <- -1/log(apply(dat, 2, rank, ties.method = ties.method)/(nrow(dat) + 1L))
   }
   if(norm == "lp" && is.infinite(int)){
     norm == "max"
@@ -65,21 +65,21 @@ WD.diag <- function(dat,
     stopifnot(int <= ncol(pseudo),
               int > 0)
     radius <- pseudo[,int]
-    angles <- pseudo[,-int]/radius
+    angles <- pseudo[,-int, drop = FALSE]/radius
   } else if(norm == "lp"){
     if(int == 1L){
      radius <- rowSums(pseudo)
-     angles <- pseudo[,-1]/radius
+     angles <- pseudo[,-1, drop = FALSE]/radius
     } else{
       radius <- rowSums(pseudo^int)^(1/int)
-      angles <- pseudo[,-1]/radius
+      angles <- pseudo[,-1, drop = FALSE]/radius
     }
   } else if(norm == "min"){
     radius <- apply(pseudo, 1, min)
-    angles <- t(apply(pseudo, 1, function(x){x[-which.min(x)]}))/radius
+    angles <- as.matrix(apply(pseudo, 1, function(x){x[-which.min(x)]})/radius)
   } else if(norm == "max"){
     radius <- apply(pseudo, 1, max)
-    angles <- t(apply(pseudo, 1, function(x){x[-which.max(x)]}))/radius
+    angles <- as.matrix(apply(pseudo, 1, function(x){x[-which.max(x)]})/radius)
   }
   # Sort entries
   # od <- order(radius, decreasing = TRUE)
@@ -102,7 +102,7 @@ WD.diag <- function(dat,
     data.frame(
       thresh = thresh,
       pval = pval,
-      changepoints = pval_chpt$cpts,
+      # changepoints = pval_chpt$cpts,
       median_pval = pval_chpt$est)
   if(plot){
   plot(x = 1 - thresh,

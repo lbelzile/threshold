@@ -83,3 +83,63 @@ rrjbmixt <- function(n, kappa, beta,
       lower = 0,
       upper = 1e10)$root})
 }
+
+#' Folded student
+#' @name ft
+#' @description Density, distribution function, quantile function and random generation for the Student-t distribution with \code{df} degrees of freedom.
+#' @param x vector of quantiles.
+#' @param q vector of quantiles.
+#' @param p vector of probabilities.
+#' @param n number of observations.
+#' @param df degrees of freedom
+#' @param log logical; if \code{TRUE}, probabilities \code{p} are given as \eqn{\log(p)}.
+#' @param log.p	logical; if \code{TRUE}, probabilities \code{p} are given as \eqn{\log(p)}.
+#' @param lower.tail logical; if \code{TRUE} (default), probabilities are \eqn{\Pr(X \le x)}, otherwise \eqn{\Pr(X > x)}.
+NULL
+
+#' @describeIn ft density
+#' @export
+dft <- function(x, df, log = FALSE){
+  if(!log){
+    2*dt(x = ifelse(x < 0, -Inf, x), df = df)
+  } else{
+    log(2) + dt(x = ifelse(x < 0, -Inf, x),
+                df = df, log = TRUE)
+  }
+}
+
+#' @describeIn ft density
+#' @export
+qft <- function(p, df, lower.tail = TRUE, log.p = FALSE){
+  if(log.p){
+    p <- exp(p)
+  }
+  if(!lower.tail){
+    p <- 1 - p/2
+  } else{
+    p <- 0.5 + p/2
+  }
+  qt(p, df = df, lower.tail = lower.tail,
+     log.p = FALSE)
+}
+
+#' @describeIn ft density
+#' @export
+pft <- function(q, df, lower.tail = TRUE, log.p = FALSE){
+  p <- 2*(pt(q = q, df = df, lower.tail = TRUE,
+             log.p = FALSE) - 0.5)
+  if(!lower.tail){
+    p <- 1 - p
+  }
+  if(log.p){
+    return(log(p))
+  } else{
+    return(p)
+  }
+}
+
+#' @describeIn ft density
+#' @export
+rft <- function(n, df){
+  abs(rt(n = n, df = df))
+}

@@ -1,25 +1,4 @@
 
-
-#' Quantile function of folded Student-t
-#'
-#' @param p vector of probabilities
-#' @param df degrees of freedom
-#' @param lower.tail logical; if \code{TRUE}, returns the lower tail (distribution function)
-#' @param log.p logical; if \code{TRUE}, argument \code{p} contains log-probabilities.
-#' @keywords internal
-qft <- function(p, df = 1, lower.tail = TRUE, log.p = FALSE){
-  qt(0.5+p/2, df = df, lower.tail = lower.tail,  log.p =log.p)
-}
-
-#' Random generation for folded Student-t
-#'
-#' Generate random sample from half-Student above zero via folding
-#' @param n sample size
-#' @keywords internal
-rft <- function(n, df){
-  abs(rt(n = n, df = df))
-}
-
 # Functions for the threshold selection simulation study
 
 #' Simulate observations from parametric models
@@ -28,7 +7,7 @@ rft <- function(n, df){
 #' @param model [list] list with arguments \code{family}, a string indicating the parametric family and a list \code{args} for the distribution parameters
 #' @param rounding [character] string indicating the level of rounding of observations. Default to \code{none}
 #' @param seed [integer] seed for the simulation
-#' @param ar [numeric] scalar indicating the strength of the first-order autocorrelation. If missing, default to \code{0.5}
+#' @param ar [numeric] scalar indicating the strength of the first-order autocorrelation. If missing, default to \code{0} (uncorrelated samples)
 #' @examples
 #' simulate_parametric(
 #'   n = 100,
@@ -86,12 +65,12 @@ simulate_parametric <- function(
     # to change the margins from normal
     # a poorman's attempt to create clustering
     args$p <-
-     pnorm(
+     as.numeric(pnorm(
        arima.sim(model = list(
          order = c(nar, 0, 0),
          ar = ar),
          rand.gen = rnorm,
-         n = n))
+         n = n)))
    dat <- do.call(paste0("q", family),
                   args = args)
   }
@@ -107,7 +86,7 @@ simulate_parametric <- function(
   round_fn <- function(x, c){
     floor(x/c)*c + 0.5*c
   }
-  dat <- round_fn(hquant*dat, c = 0.1)/hquant
+  dat <- round_fn(hquant*dat, c = rounding)/hquant
   }
  return(dat)
 }

@@ -1,7 +1,7 @@
 Package: threshold
 Type: Package
 Title: Threshold Selection Methods for Extreme Value Analysis
-Version: 2023.03-15
+Version: 2023.09.28
 Authors@R: c(person(given="Leo", family="Belzile", role = c("aut", "cre"), email = "belzilel@gmail.com", comment = c(ORCID = "0000-0002-9135-014X")))
 Description: Methods for the selection of univariate and multivariate
     thresholds for the analysis of exceedances.

@@ -30,7 +30,7 @@ WD.diag <- function(dat,
          ties.method = c("average", "first", "last", "random", "max", "min"),
          plot = TRUE
          ){
-         
+
           if (!requireNamespace("breakfast", quietly = TRUE)) {
         warning("\"breakfast\" package is not installed.")
         return(invisible(NULL) )
@@ -45,8 +45,8 @@ WD.diag <- function(dat,
   stopifnot(is.matrix(dat),
             is.integer(int) | is.infinite(int),
             int > 0,
-            isTRUE(all(thresh < 0)),
-            isTRUE(all(thresh > 1)),
+            isTRUE(all(thresh > 0)),
+            isTRUE(all(thresh < 1)),
             length(thresh) > 1L)
 
   # 1) transform observations to regularly varying scale

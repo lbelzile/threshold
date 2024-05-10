@@ -15,7 +15,7 @@ simulate_parametric(n, model, rounding = 0, seed = NULL, ar = 0)
 
 \item{seed}{[integer] seed for the simulation}
 
-\item{ar}{[numeric] scalar indicating the strength of the first-order autocorrelation. If missing, default to \code{0.5}}
+\item{ar}{[numeric] scalar indicating the strength of the first-order autocorrelation. If missing, default to \code{0} (uncorrelated samples)}
 }
 \description{
 Simulate observations from parametric models

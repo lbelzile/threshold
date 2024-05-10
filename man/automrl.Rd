@@ -19,9 +19,9 @@ and the chosen threshold}
 \value{
 a list containing
 \itemize{
-\item{thresh}{selected threshold}
-\item{scale}{scale parameter estimate}
-\item{shape}{shape parameter estimate}
+\item thresh selected threshold
+\item scale scale parameter estimate
+\item shape shape parameter estimate
 }
 }
 \description{

@@ -11,7 +11,7 @@
 
 #' Energy statistic tests for multivariate thresholds
 #'
-#'
+#' @export
 #' @references Wan, P. and R.A. Davis (2018), \emph{Threshold selection for multivariate heavy-tailed data}, Extremes \bold{22}(1), pp. 131-166.
 #' @param dat (matrix) an \code{n} by \code{p} matrix of observations
 #' @param thresh (vector) probability levels for quantiles

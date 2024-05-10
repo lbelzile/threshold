@@ -16,9 +16,9 @@
 #'
 #' @return a list containing
 #' \itemize{
-#' \item{thresh}{selected threshold}
-#' \item{scale}{scale parameter estimate}
-#' \item{shape}{shape parameter estimate}
+#' \item thresh selected threshold
+#' \item scale scale parameter estimate
+#' \item shape shape parameter estimate
 #' }
 #'
 #' @param xdat [numeric] vector of observations

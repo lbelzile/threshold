@@ -12,24 +12,27 @@
 #'
 #' For each bootstrap sample, we refit the
 #'  model and convert the quantiles to
-#'  xponential or uniform variates.
+#' exponential or uniform variates.
 #' The mean absolute or mean squared distance
 #' is calculated on these. The threshold
 #' returned is the one with the lowest value
 #' of the metric.
 #'
-#' @param xdat vector of observations
-#' @param thresh vector of thresholds
-#' @param B number of bootstrap replications
-#' @param type type of graph, either \code{pp} for probability-probability plots or \code{qq} for quantile-quantile plots
-#' @param neval number of points at which to estimate the metric. Default to 1000
-#' @param dist string; the distance used, either absolute distance (\code{l1}) or Euclidean distance (\code{l2})
+#' @export
+#' @param xdat [numeric] vector of observations
+#' @param thresh [numeric] vector of thresholds
+#' @param B [integer] number of bootstrap replications
+#' @param type [string] type of graph, either \code{pp} for probability-probability plots, \code{qq} for quantile-quantile plots or \code{exp} for unit exponential Q-Q plots
+#' @param neval [integer] number of points at which to estimate the metric. Default to 1000
+#' @param dist [string] the distance used, either absolute distance (\code{l1}) or Euclidean distance (\code{l2})
+#' @param paruq [logical] if \code{TRUE}, generate bootstrap samples accounting for the sampling distribution of parameters
 vmetric.diag <- function(
       xdat,
       thresh,
       B = 199L,
-      type = c("qq", "pp"),
-      dist = c("l1","l2"),
+      type = c("exp", "qq", "pp"),
+      dist = c("l1", "l2"),
+      paruq = FALSE,
       neval = 1000L){
   dist <- match.arg(dist)
   type = match.arg(type)
@@ -42,22 +45,26 @@ vmetric.diag <- function(
   nt <- length(thresh)
 
 
-  # Compute metric from exponential data
-  compute_metric <- function(expdat,
+  # Compute metric - xdat should be exponential/gp/uniform
+  compute_metric <- function(xdat,
                              ppoints,
-                             type = c("qq", "pp"),
-                             dist = c("l1", "l2")){
+                             type = c("exp", "qq", "pp"),
+                             dist = c("l1", "l2"),
+                             pars = c(1, 0)){
     dist <- match.arg(dist)
     type <- match.arg(type)
-    if(type == "qq" & dist == "l1"){
-      m <- mean(abs(-log(1-ppoints) -
-                      quantile(expdat, ppoints)))
+    if(type == "exp" & dist == "l1"){
+      m <- mean(abs(-log(1-ppoints) - quantile(xdat, ppoints)))
+    } else if(type == "exp" & dist == "l2"){
+      m <- mean((-log(1-ppoints) - quantile(xdat, ppoints))^2)
+    } else if(type == "qq" & dist == "l1"){
+      m <- mean(abs(mev::qgp(ppoints, scale = pars[1], shape = pars[2]) - quantile(xdat, ppoints)))
     } else if(type == "qq" & dist == "l2"){
-      m <- mean((-log(1-ppoints) - quantile(expdat,ppoints))^2)
+      m <- mean((mev::qgp(ppoints, scale = pars[1], shape = pars[2]) - quantile(xdat, ppoints))^2)
     } else if(type == "pp" & dist == "l1"){
-      m <- mean((ppoints*(1-ppoints)/sqrt(length(expdat)))^(-1/2)*abs(ppoints - ecdf(expdat)(-log(1-ppoints))))
+      m <- mean((ppoints*(1-ppoints)/sqrt(length(xdat)))^(-1/2)*abs(ppoints - ecdf(xdat)(ppoints)))
     } else if(type == "pp" & dist == "l2"){
-      m <- mean((ppoints*(1-ppoints)/sqrt(length(expdat)))^(-1/2)*(ppoints - ecdf(expdat)(-log(1-ppoints)))^2)
+      m <- mean((ppoints*(1-ppoints)/sqrt(length(xdat)))^(-1/2)*(ppoints - ecdf(xdat)(ppoints))^2)
     }
     return(m)
   }
@@ -66,29 +73,43 @@ vmetric.diag <- function(
   ps <- ppoints(n = neval)
   for(i in seq_along(thresh)){
    # 1) Fit model
-   mle <- mev::fit.gpd(xdat = xdat,
-                 threshold = thresh[i])
-   boot_par <- mev::gpd.boot(mle,
-                        B = B,
-                        method = "post")
+   mle <- mev::fit.gpd(
+     xdat = xdat,
+     threshold = thresh[i])
+   if(isTRUE(paruq)){
+   boot_par <- mev::gpd.boot(
+     object = mle,
+     B = B,
+     method = "post")
+   }
+   spars <- as.numeric(coef(mle))
    # Create GP sample, refit model
    stat <- rep(NA, B)
    for(j in seq_len(B)){
-     boot_samp <- revdbayes::rgp(n = nobs(mle),
-                            scale = boot_par[j,1],
-                            shape = boot_par[j,2])
+     if(isTRUE(paruq)){
+      spars <-  boot_par[j,]
+     }
+     boot_samp <- mev::rgp(
+       n = nobs(mle),
+       scale = spars[1],
+       shape = spars[2])
      boot_mle <- try(mev::fit.gpd(boot_samp,
                               threshold = 0))
      if(!inherits(boot_mle, "try-error")){
-     boot_expsamp <-
-       qexp(revdbayes::pgp(q = boot_samp,
+       if(type %in% c("exp","pp")){
+         boot_samp <- revdbayes::pgp(q = boot_samp,
                  scale = coef(boot_mle)[1],
-                 shape = coef(boot_mle)[2]))
-    stat[j] <- compute_metric(expdat = boot_expsamp,
+                 shape = coef(boot_mle)[2])
+         if(type == "exp"){
+          boot_samp <- qexp(boot_samp)
+         }
+       }
+    stat[j] <- compute_metric(xdat = boot_samp,
                               ppoints = ps,
                               type = type,
-                              dist = dist)
-     } else {
+                              dist = dist,
+                              pars = coef(boot_mle))
+     } else { # if the fit failed, retry again!
        j = j - 1
      }
    }
@@ -119,8 +140,8 @@ vmetric.diag <- function(
 #' method to obtain samples from the posterior
 #' distribution with uninformative priors, thus
 #' mimicking the joint distribution of maximum likelihood.
-#' The benefit of the latter is that it is more reliable
-#' in small samples and when the shape is negative.
+#' The benefit of the latter is that it is closer to the
+#' sampling distribution in small samples and when the shape is negative.
 #'
 #' @param object object of class \code{mev_gpd}
 #' @param B number of pairs to sample
@@ -129,8 +150,8 @@ vmetric.diag <- function(
 #' @return a matrix of size B by 2 whose columns contain scale and shape parameters
 #' @export
 gpd.boot <- function(object,
-                        B = 1000L,
-                        method = c("post","norm")){
+                     B = 1000L,
+                     method = c("post","norm")){
   method <- match.arg(method)
   B <- as.integer(B)
   stopifnot(B > 1L,

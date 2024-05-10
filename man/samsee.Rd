@@ -13,7 +13,7 @@ samsee(data)
 a list with elements
 \describe{
 \item{\code{k}}{optimal number of exceedances}
-#' \item{\code{gamma_hill}}{Hill's estimator of the tail index}
+\item{\code{gamma_hill}}{Hill's estimator of the tail index}
 \item{\code{gamma_v}}{de Vries estimator of the tail index}
 \item{\code{gamma_gj}}{generalized jackknife estimator of the tail index}
 }

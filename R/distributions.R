@@ -12,6 +12,7 @@
 #' @param eps amount of overlap
 #' @param lower.tail logical; if \code{TRUE}, return distribution function and survival function otherwise
 #' @keywords internal
+#' @export
 #' @references Roth, Jongbloef, Buishand (2016), \emph{Threshold selection for regional peaks-over-threshold data}, Journal of Applied Statistics
 #' @examples
 #' q <- seq(0, 16, length.out = 200)
@@ -70,6 +71,7 @@ prjbmixt <- function(q, kappa, beta,
 #' @param n sample size
 #' @references Roth, Jongbloef, Buishand (2016), \emph{Threshold selection for regional peaks-over-threshold data}, Journal of Applied Statistics
 #' @keywords internal
+#' @export
 rrjbmixt <- function(n, kappa, beta,
                      sigma, xi, u, eps){
   sapply(runif(n), function(ui){

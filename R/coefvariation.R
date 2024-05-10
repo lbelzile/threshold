@@ -16,7 +16,7 @@
 #' @param level [numeric] probability level for sequential testing procedure
 #' @param lazy [logical] compute the bootstrap p-value until the test stops rejecting at level \code{level}? Default to \code{FALSE}
 #' @return a list with elements
-#' \itemize{
+#' \describe{
 #' \item{thresh}{value of threshold returned by the procedure, \code{NA} if the hypothesis is rejected at all thresholds}
 #' \item{cthresh}{sorted vector of candidate thresholds}
 #' \item{cindex}{index of selected threshold among \code{cthresh} or \code{NA} if none returned}
@@ -25,6 +25,7 @@
 #' \item{nexc}{number of exceedances of each threshold \code{cthresh}}
 #' \item{method}{estimation method for the shape parameter}
 #' }
+#' @export
 #' @references del Castillo, J. and M. Padilla (2016). \emph{Modelling extreme values by the residual coefficient of variation}, SORT, 40(\bold{2}), pp. 303--320.
 cvselect <- function(
     data,

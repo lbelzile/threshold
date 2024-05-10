@@ -31,7 +31,7 @@ cvselect(
 }
 \value{
 a list with elements
-\itemize{
+\describe{
 \item{thresh}{value of threshold returned by the procedure, \code{NA} if the hypothesis is rejected at all thresholds}
 \item{cthresh}{sorted vector of candidate thresholds}
 \item{cindex}{index of selected threshold among \code{cthresh} or \code{NA} if none returned}

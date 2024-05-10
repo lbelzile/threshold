@@ -7,7 +7,7 @@
 WD.diag(
   dat,
   thresh,
-  norm = c("proj", "lp", "max", "min"),
+  norm = c("lp", "proj", "max", "min"),
   int = 1L,
   B = 999L,
   margtransfo = c("Pareto", "Frechet"),
@@ -20,7 +20,7 @@ WD.diag(
 
 \item{thresh}{(vector) probability levels for quantiles}
 
-\item{norm}{(string) one of componentwise-projection (\code{proj}) or \code{lp} norm}
+\item{norm}{(string) one of componentwise-projection (\code{proj}), \code{min}, \code{max} or \code{lp} norm}
 
 \item{int}{(integer) the index of the component if \code{norm='proj'}, or the exponent of the \code{lp} norm. \code{Inf} returns the maximum component.}
 

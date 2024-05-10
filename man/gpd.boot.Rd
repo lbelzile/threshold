@@ -34,6 +34,6 @@ The second approximation uses the ratio-of-uniforms
 method to obtain samples from the posterior
 distribution with uninformative priors, thus
 mimicking the joint distribution of maximum likelihood.
-The benefit of the latter is that it is more reliable
-in small samples and when the shape is negative.
+The benefit of the latter is that it is closer to the
+sampling distribution in small samples and when the shape is negative.
 }

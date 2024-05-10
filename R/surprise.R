@@ -11,6 +11,7 @@
 #' \item Compute Bayesian p-value as proportion of times the value exceeds that for observed data
 #' }
 #'
+#' @export
 #' @param dat [vector] data
 #' @param u [vector] threshold
 #' @param prior [string] name of prior for the \code{revdbayes} package (default to maximal data information)

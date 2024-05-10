@@ -12,6 +12,7 @@
 #' \item{\code{tail.index}}{Hill's estimator of the tail index based on k0 exceedances}
 #' \item{\code{threshold}}{numerical value of the threshold, the n-k0+1 order statistic of the original sample}
 #' }
+#' @export
 sihs <- function(data, maxk = 500L){
   # Keep log exceedances and sort
   data <- data[is.finite(data) & data > 0]
@@ -44,10 +45,11 @@ sihs <- function(data, maxk = 500L){
 #' @return a list with elements
 #' \describe{
 #' \item{\code{k}}{optimal number of exceedances}
-#' #' \item{\code{gamma_hill}}{Hill's estimator of the tail index}
+#' \item{\code{gamma_hill}}{Hill's estimator of the tail index}
 #' \item{\code{gamma_v}}{de Vries estimator of the tail index}
 #' \item{\code{gamma_gj}}{generalized jackknife estimator of the tail index}
 #' }
+#' @export
 samsee <- function(data){
   # Keep log exceedances and sort
   data <- data[is.finite(data) & data > 0]
@@ -112,6 +114,7 @@ samsee <- function(data){
 #' \item{\code{tail.index}}{Hill's estimator of the tail index based on k0 exceedances}
 #' \item{\code{threshold}}{numerical value of the threshold, the n-k0+1 order statistic of the original sample}
 #' }
+#' @export
 mdps <- function(data){
   data <- data[is.finite(data) & data > 0]
   n <- length(data)

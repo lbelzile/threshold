@@ -8,23 +8,26 @@ vmetric.diag(
   xdat,
   thresh,
   B = 199L,
-  type = c("qq", "pp"),
+  type = c("exp", "qq", "pp"),
   dist = c("l1", "l2"),
+  paruq = FALSE,
   neval = 1000L
 )
 }
 \arguments{
-\item{xdat}{vector of observations}
+\item{xdat}{[numeric] vector of observations}
 
-\item{thresh}{vector of thresholds}
+\item{thresh}{[numeric] vector of thresholds}
 
-\item{B}{number of bootstrap replications}
+\item{B}{[integer] number of bootstrap replications}
 
-\item{type}{type of graph, either \code{pp} for probability-probability plots or \code{qq} for quantile-quantile plots}
+\item{type}{[string] type of graph, either \code{pp} for probability-probability plots, \code{qq} for quantile-quantile plots or \code{exp} for unit exponential Q-Q plots}
 
-\item{dist}{string; the distance used, either absolute distance (\code{l1}) or Euclidean distance (\code{l2})}
+\item{dist}{[string] the distance used, either absolute distance (\code{l1}) or Euclidean distance (\code{l2})}
 
-\item{neval}{number of points at which to estimate the metric. Default to 1000}
+\item{paruq}{[logical] if \code{TRUE}, generate bootstrap samples accounting for the sampling distribution of parameters}
+
+\item{neval}{[integer] number of points at which to estimate the metric. Default to 1000}
 }
 \description{
 Poor man's adaptation of Varty et al. for the
@@ -39,7 +42,7 @@ approximation to the maximum likelihood estimator distribution.
 
 For each bootstrap sample, we refit the
  model and convert the quantiles to
- xponential or uniform variates.
+exponential or uniform variates.
 The mean absolute or mean squared distance
 is calculated on these. The threshold
 returned is the one with the lowest value

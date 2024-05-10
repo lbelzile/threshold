@@ -14,6 +14,7 @@
 #'   model = list(family = "weibull", args = list(shape = 1.25)),
 #'   rounding = 0.5
 #' )
+#' @export
 simulate_parametric <- function(
     n,
     model,
@@ -104,6 +105,7 @@ simulate_parametric <- function(
 #' @param p [double] probability level for quantile and expectiles
 #' @param risk [string] choice of risk function, either `quantile` or `maxquant` for `penultimate`
 #' @param mlen [integer] length of block maximum
+#' @export
 #' @examples
 #' # Compute return level of 1000 obs
 #' risk_measures(
@@ -179,6 +181,7 @@ risk_measures <- function(
 #' \code{p}th quantile (default is median) as measure of risk.
 #' The function is vectorized over \code{thresh}.
 #'
+#' @export
 #' @param data [numeric] vector of observations
 #' @param thresh [numeric] vector of thresholds
 #' @param p [numeric] scalar probability level for quantile

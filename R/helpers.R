@@ -1,4 +1,3 @@
-
 # Functions for the threshold selection simulation study
 
 #' Simulate observations from parametric models
@@ -16,28 +15,30 @@
 #' )
 #' @export
 simulate_parametric <- function(
-    n,
-    model,
-    rounding = 0,
-    seed = NULL,
-    # nobs = 1000L,
-    # p = 0.5,
-    ar = 0
-){
-  stopifnot(is.numeric(rounding),
-            is.finite(rounding),
-            length(rounding) == 1L,
-            rounding < 1,
-            rounding >= 0)
-  stopifnot(is.numeric(ar),
-            is.finite(ar),
-            isTRUE(all(ar < 1)),
-            isTRUE(length(ar) >= 1))
-  serialdep <- !isTRUE(all.equal(ar, 0,
-                                 check.attributes = FALSE))
-  if(!is.null(seed)){
-     stopifnot(length(seed) == 1L,
-               isTRUE(is.finite(seed)))
+  n,
+  model,
+  rounding = 0,
+  seed = NULL,
+  # nobs = 1000L,
+  # p = 0.5,
+  ar = 0
+) {
+  stopifnot(
+    is.numeric(rounding),
+    is.finite(rounding),
+    length(rounding) == 1L,
+    rounding < 1,
+    rounding >= 0
+  )
+  stopifnot(
+    is.numeric(ar),
+    is.finite(ar),
+    isTRUE(all(ar < 1)),
+    isTRUE(length(ar) >= 1)
+  )
+  serialdep <- !isTRUE(all.equal(ar, 0, check.attributes = FALSE))
+  if (!is.null(seed)) {
+    stopifnot(length(seed) == 1L, isTRUE(is.finite(seed)))
     set.seed(as.integer(seed))
   }
   # Users provide a list with arguments
@@ -49,14 +50,14 @@ simulate_parametric <- function(
   args <- model$args
   # Get formal arguments
   argsnames <- formalArgs(paste0("r", family))[-1]
-  if(!is.null(args)){
+  if (!is.null(args)) {
     # Check arguments names
     stopifnot(isTRUE(all(
-      names(args) %in% argsnames)))
+      names(args) %in% argsnames
+    )))
   }
-  if(!serialdep){
-    dat <- do.call(paste0("r", family),
-                   args = c(args, n = n))
+  if (!serialdep) {
+    dat <- do.call(paste0("r", family), args = c(args, n = n))
   } else {
     # Simulate from an AR(1) model
     # Then use df / quantile transform
@@ -66,30 +67,33 @@ simulate_parametric <- function(
     # to change the margins from normal
     # a poorman's attempt to create clustering
     args$p <-
-     as.numeric(pnorm(
-       arima.sim(model = list(
-         order = c(nar, 0, 0),
-         ar = ar),
-         rand.gen = rnorm,
-         n = n)))
-   dat <- do.call(paste0("q", family),
-                  args = args)
+      as.numeric(pnorm(
+        arima.sim(
+          model = list(
+            order = c(nar, 0, 0),
+            ar = ar
+          ),
+          rand.gen = rnorm,
+          n = n
+        )
+      ))
+    dat <- do.call(paste0("q", family), args = args)
   }
-  if(rounding > 0){
-  # Rounding
-  # It is tempting to round quantiles on the uniform scale,
-  #  but then all of the largest observations are equal
-  #  and this in turn gives shape estimates of -1...
-  # Instead, map the 95% to 100, then round to 0.1 or 0.5
-  # and back-transform
-  args$p <- 0.95
-  hquant <- 100/do.call(paste0("q", family), args = args)
-  round_fn <- function(x, c){
-    floor(x/c)*c + 0.5*c
+  if (rounding > 0) {
+    # Rounding
+    # It is tempting to round quantiles on the uniform scale,
+    #  but then all of the largest observations are equal
+    #  and this in turn gives shape estimates of -1...
+    # Instead, map the 95% to 100, then round to 0.1 or 0.5
+    # and back-transform
+    args$p <- 0.95
+    hquant <- 100 / do.call(paste0("q", family), args = args)
+    round_fn <- function(x, c) {
+      floor(x / c) * c + 0.5 * c
+    }
+    dat <- round_fn(hquant * dat, c = rounding) / hquant
   }
-  dat <- round_fn(hquant*dat, c = rounding)/hquant
-  }
- return(dat)
+  return(dat)
 }
 
 #' Risk measures for selected parametric models
@@ -126,50 +130,45 @@ simulate_parametric <- function(
 #'  mlen = 1000L,
 #'  risk = "penultimate")
 risk_measures <- function(
-      model,
-      p = 0.999,
-      risk = c("quantile",
-               "maxquant",
-               "penultimate"),
-      mlen = 1L){
+  model,
+  p = 0.999,
+  risk = c("quantile", "maxquant", "penultimate"),
+  mlen = 1L
+) {
   risk <- match.arg(risk)
-  if(risk != "quantile"){
-   mlen <- as.integer(mlen)
-  stopifnot(length(mlen) == 1L,
-            isTRUE(mlen >= 1L),
-            is.finite(mlen))
+  if (risk != "quantile") {
+    mlen <- as.integer(mlen)
+    stopifnot(length(mlen) == 1L, isTRUE(mlen >= 1L), is.finite(mlen))
   }
-  stopifnot(is.numeric(p),
-            is.finite(p),
-            isTRUE(all(p < 1 & p > 0)))
+  stopifnot(is.numeric(p), is.finite(p), isTRUE(all(p < 1 & p > 0)))
   stopifnot(is.list(model))
   stopifnot(!is.null(model$family))
   family <- model$family
   args <- model$args
   # Get formal arguments
   argsnames <- formalArgs(paste0("r", family))[-1]
-  if(!is.null(args)){
+  if (!is.null(args)) {
     # Check arguments names
     stopifnot(isTRUE(all(
-      names(args) %in% argsnames)))
+      names(args) %in% argsnames
+    )))
   }
-  if(risk == "quantile"){
-    do.call(what = paste0("q", family),
-            args = c(args, p = p))
-  } else if(risk == "maxquant"){
-    do.call(what = paste0("q", family),
-            args = c(args, p = p^(1/mlen)))
+  if (risk == "quantile") {
+    do.call(what = paste0("q", family), args = c(args, p = p))
+  } else if (risk == "maxquant") {
+    do.call(what = paste0("q", family), args = c(args, p = p^(1 / mlen)))
   } else {
     penult <-
-      do.call(mev::smith.penult,
-              args = c(list(family = family,
-                            method = "bm",
-                            m = mlen),
-                       model$args))
-    return(revdbayes::qgev(p = p,
-              loc = penult$loc,
-              scale = penult$scale,
-              shape = penult$shape))
+      do.call(
+        mev::smith.penult,
+        args = c(list(family = family, method = "bm", m = mlen), model$args)
+      )
+    return(revdbayes::qgev(
+      p = p,
+      loc = penult$loc,
+      scale = penult$scale,
+      shape = penult$shape
+    ))
   }
 }
 
@@ -187,32 +186,30 @@ risk_measures <- function(
 #' @param p [numeric] scalar probability level for quantile
 #' @param mlen [integer] scalar number of observations for the extrapolation.
 compute_summary <-
-  function(data,
-           thresh,
-           p = 0.5,
-           mlen = 1000L){
-    stopifnot(is.finite(thresh),
-              is.numeric(p),
-              is.finite(p),
-              is.integer(mlen),
-              length(mlen) == 1L)
-  thresh <- sort(thresh)
-  risk <- rep(NA, length(thresh))
-  # Fit generalized Pareto
-  for(i in seq_along(thresh)){
-    fit <- try(mev::fit.gpd(data,
-                            threshold = thresh[i]))
-    if(!inherits(fit, "try-error")){
-    nexc <- sum(data > thresh[i])
-    # Get exponent
-    pow <- 1/(mlen*nexc/length(data))
-    # Compute risk measure
-    risk[i] <- revdbayes::qgp(p = p^pow,
-              scale = coef(fit)['scale'],
-              shape = coef(fit)['shape'])
+  function(data, thresh, p = 0.5, mlen = 1000L) {
+    stopifnot(
+      is.finite(thresh),
+      is.numeric(p),
+      is.finite(p),
+      is.integer(mlen),
+      length(mlen) == 1L
+    )
+    thresh <- sort(thresh)
+    risk <- rep(NA, length(thresh))
+    # Fit generalized Pareto
+    for (i in seq_along(thresh)) {
+      fit <- try(mev::fit.gpd(data, threshold = thresh[i]))
+      if (!inherits(fit, "try-error")) {
+        nexc <- sum(data > thresh[i])
+        # Get exponent
+        pow <- 1 / (mlen * nexc / length(data))
+        # Compute risk measure
+        risk[i] <- revdbayes::qgp(
+          p = p^pow,
+          scale = coef(fit)['scale'],
+          shape = coef(fit)['shape']
+        )
+      }
     }
+    return(risk + thresh)
   }
-  return(risk + thresh)
-}
-
-

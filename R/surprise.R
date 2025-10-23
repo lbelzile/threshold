@@ -1,4 +1,4 @@
-#' Bayesian measure of surprise
+#' Bayesian measure of surprise threshold seleection
 #'
 #' Threshold stability plots proposed by Lee, Fan and Sisson (2015) using measures of goodness-of-fit for threshold selection.
 #' Values around 1/2 imply that the generalized Pareto model is a good approximation to the threshold exceedances.
@@ -12,7 +12,7 @@
 #' }
 #'
 #' @export
-#' @param dat [vector] data
+#' @param xdat [vector] data
 #' @param u [vector] threshold
 #' @param prior [string] name of prior for the \code{revdbayes} package (default to maximal data information)
 #' @param B [integer] number of posterior replications (default to 10 000)
@@ -23,41 +23,40 @@
 #' @param type [string] type of likelihood, either \code{partial} or \code{posterior}. See the article for references
 #' @return an invisible list with elements
 #' \describe{
-#' \item{\code{threshold}}{\code{k} vector of candidate thresholds}
+#' \item{\code{thresh}}{\code{k} vector of candidate thresholds}
 #' \item{\code{pval}}{\code{k} by \code{nrep} matrix of p-values}
 #' \item{\code{mean_pval}}{average p-value for each threshold},
 #' \item{\code{stat}}{string indicating the test statistic}
 #' \item{\code{type}}{string indicating whether the partial or full posterior are used}
 #' \item{\code{nrep}}{integer number of replication}
 #' }
-surprise.diag <-
-  function(dat,
-           u,
-           type = c("posterior", "partial"),
-           prior = "mdi",
-           B = 1e3L,
-           nrep = 100,
-           stat = c("reciplik", "quantile", "rlargest"),
-           os = 1,
-           plot = TRUE) {
+tstab.bayessurprise <-
+  function(
+    xdat,
+    thresh,
+    type = c("posterior", "partial"),
+    prior = "mdi",
+    B = 1e3L,
+    nrep = 100,
+    stat = c("reciplik", "quantile", "rlargest"),
+    os = 1,
+    plot = TRUE
+  ) {
     stopifnot(
-      "Data is not a vector" = is.vector(dat),
+      "Data is not a vector" = is.vector(xdat),
       "Threshold is not a vector" = is.vector(u),
       "Threshold is negative" = isTRUE(all(u >= 0)),
-      "Threshold exceeds maximum observation" = max(dat) > max(u)
+      "Threshold exceeds maximum observation" = max(xdat) > max(u)
     )
     u <- sort(u)
-    dat <- sort(dat)
+    xdat <- sort(xdat)
     stat <- match.arg(stat)
     type <- match.arg(type)
     os <- as.integer(os)
 
-    dallosgp <- function(y, scale, shape, k, log = TRUE){
-      stopifnot(length(scale) == 1L,
-                length(shape) == 1L,
-                k > 0,
-                k < length(y))
-      if(is.unsorted(y)){
+    dallosgp <- function(y, scale, shape, k, log = TRUE) {
+      stopifnot(length(scale) == 1L, length(shape) == 1L, k > 0, k < length(y))
+      if (is.unsorted(y)) {
         y <- sort(y)
       }
       n <- length(y)
@@ -66,16 +65,21 @@ surprise.diag <-
       }
       # lgamma(n + 1L) -
       #   lgamma(n - k + 1) +
-      sum(revdbayes::dgp(x= y[(n - k + 1):n],
-                         loc = 0,
-                         scale = scale,
-                         shape = shape,
-                         log = TRUE)) +
-        (n - k) * revdbayes::pgp(q = y[n - k + 1L],
-                                 loc = 0,
-                                 scale = scale,
-                                 shape = shape,
-                                 log.p = TRUE)
+      sum(revdbayes::dgp(
+        x = y[(n - k + 1):n],
+        loc = 0,
+        scale = scale,
+        shape = shape,
+        log = TRUE
+      )) +
+        (n - k) *
+          revdbayes::pgp(
+            q = y[n - k + 1L],
+            loc = 0,
+            scale = scale,
+            shape = shape,
+            log.p = TRUE
+          )
     }
 
     dosgp <- function(yj, scale, shape, j, n, log = TRUE) {
@@ -88,68 +92,78 @@ surprise.diag <-
       if (yj < 0 || scale < 0 || (shape < 0 && shape * yj + scale < 0)) {
         return(-1e15)
       }
-      lgamma(n + 1) - lgamma(j) - lgamma(n - j + 1) + revdbayes::dgp(
-        yj,
-        loc = 0,
-        scale = scale,
-        shape = shape,
-        log = TRUE
-      ) + (j - 1) * log(revdbayes::pgp(
-        yj,
-        loc = 0,
-        scale = scale,
-        shape = shape
-      )) + (n - j) * log(revdbayes::pgp(
-        yj,
-        loc = 0,
-        scale = scale,
-        shape = shape,
-        lower.tail = FALSE
-      ))
+      lgamma(n + 1) -
+        lgamma(j) -
+        lgamma(n - j + 1) +
+        revdbayes::dgp(
+          yj,
+          loc = 0,
+          scale = scale,
+          shape = shape,
+          log = TRUE
+        ) +
+        (j - 1) *
+          log(revdbayes::pgp(
+            yj,
+            loc = 0,
+            scale = scale,
+            shape = shape
+          )) +
+        (n - j) *
+          log(revdbayes::pgp(
+            yj,
+            loc = 0,
+            scale = scale,
+            shape = shape,
+            lower.tail = FALSE
+          ))
     }
 
-    log_post_partial <- function(x, dat, yj, os) {
-      if(x[1] < 0){
+    log_post_partial <- function(x, xdat, yj, os) {
+      if (x[1] < 0) {
         return(1e-15)
       }
       sum(revdbayes::dgp(
-        x = dat,
+        x = xdat,
         loc = 0,
         scale = x[1],
         shape = x[2],
         log = TRUE
-      )) - dosgp(
-        yj = yj,
-        scale = x[1],
-        shape = x[2],
-        j = length(dat) - os + 1,
-        n = length(dat),
-        log = TRUE
-      ) + revdbayes::gp_mdi(x)
+      )) -
+        dosgp(
+          yj = yj,
+          scale = x[1],
+          shape = x[2],
+          j = length(xdat) - os + 1,
+          n = length(xdat),
+          log = TRUE
+        ) +
+        revdbayes::gp_mdi(x)
     }
 
-    log_postos_partial <- function(x, dat, os) {
+    log_postos_partial <- function(x, xdat, os) {
       # This assumes observations are ordered
-      if(x[2] < 0 && x[2] * dat[length(dat)] + x[1] < 0){
+      if (x[2] < 0 && x[2] * xdat[length(xdat)] + x[1] < 0) {
         return(-1e15)
       }
       sum(revdbayes::dgp(
-        x = dat,
+        x = xdat,
         loc = 0,
         scale = x[1],
         shape = x[2],
         log = TRUE
-      )) - dallosgp(
-        y = dat,
-        scale = x[1],
-        shape = x[2],
-        k = 10,
-        log = TRUE
-      ) + revdbayes::gp_mdi(x)
+      )) -
+        dallosgp(
+          y = xdat,
+          scale = x[1],
+          shape = x[2],
+          k = 10,
+          log = TRUE
+        ) +
+        revdbayes::gp_mdi(x)
     }
 
-    fp <- revdbayes::set_prior(prior = prior,
-                               model = "gp")
+    fp <- revdbayes::set_prior(prior = prior, model = "gp")
     stat_fn1 <- function(x, scale, shape) {
       sum(revdbayes::dgp(
         x = x,
@@ -165,38 +179,35 @@ surprise.diag <-
       # lgamma(length(x) + 1) -
       #   lgamma(rk) -
       #   lgamma(length(x) - rk + 1) +
-        revdbayes::dgp(
-          yj,
-          loc = 0,
-          scale = scale,
-          shape = shape,
-          log = TRUE
-        ) +
-        (rk - 1) * log(revdbayes::pgp(
-          yj,
-          loc = 0,
-          scale = scale,
-          shape = shape
-        )) +
+      revdbayes::dgp(
+        yj,
+        loc = 0,
+        scale = scale,
+        shape = shape,
+        log = TRUE
+      ) +
+        (rk - 1) *
+          log(revdbayes::pgp(
+            yj,
+            loc = 0,
+            scale = scale,
+            shape = shape
+          )) +
         (length(x) - rk) *
-        log(revdbayes::pgp(
-          yj,
-          loc = 0,
-          scale = scale,
-          shape = shape,
-          lower.tail = FALSE
-        ))
+          log(revdbayes::pgp(
+            yj,
+            loc = 0,
+            scale = scale,
+            shape = shape,
+            lower.tail = FALSE
+          ))
     }
     stat_fn3 <- function(x, scale, shape, os) {
-      dallosgp(y = x,
-               scale = scale,
-               shape = shape,
-               k = os,
-               log = TRUE)
+      dallosgp(y = x, scale = scale, shape = shape, k = os, log = TRUE)
     }
     post_pval <- matrix(0, nrow = length(u), ncol = nrep)
     for (i in seq_along(u)) {
-      exc <- dat[dat > u[i]] - u[i]
+      exc <- xdat[xdat > u[i]] - u[i]
       if (stat %in% c("quantile", "rlargest") && os > length(exc)) {
         warning("Order statistic is smaller than the number of observations.")
         post_pval[i, ] <- rep(NA, nrep)
@@ -213,30 +224,34 @@ surprise.diag <-
           if (stat == "reciplik") {
             stop("The distribution of the test statistics is intractable.")
           }
-          if(stat == "quantile"){
+          if (stat == "quantile") {
             ss <- rust::gpd_sum_stats(exc)
             temp <- do.call(rust::gpd_init, ss)
             min_phi <- pmax(0, temp$init_phi - 2 * temp$se_phi)
             max_phi <- pmax(0, temp$init_phi + 2 * temp$se_phi)
             phi_to_theta <- function(phi) c(phi[1], phi[2] - phi[1] / ss$xm)
-            log_j <- function(x){0}
-            lambda <- rust::find_lambda(logf = rust::gpd_logpost,
-                                        ss = ss,
-                                        d = 2,
-                                        min_phi = min_phi,
-                                        max_phi = max_phi,
-                                        phi_to_theta = phi_to_theta,
-                                        log_j = log_j)
+            log_j <- function(x) {
+              0
+            }
+            lambda <- rust::find_lambda(
+              logf = rust::gpd_logpost,
+              ss = ss,
+              d = 2,
+              min_phi = min_phi,
+              max_phi = max_phi,
+              phi_to_theta = phi_to_theta,
+              log_j = log_j
+            )
             gpg <- rust::ru(
               logf = log_post_partial,
               n = B * nrep,
               d = 2L,
               trans = "BC",
               lambda = lambda,
-              dat = exc,
+              xdat = exc,
               os = os
             )
-          } else if(stat == "rlargest"){
+          } else if (stat == "rlargest") {
             # These functions from the rust vignette
             # show how to transform the raw generalized Pareto
             # to improve sampling with a Box-Cox transformation
@@ -245,30 +260,32 @@ surprise.diag <-
             min_phi <- pmax(0, temp$init_phi - 2 * temp$se_phi)
             max_phi <- pmax(0, temp$init_phi + 2 * temp$se_phi)
             phi_to_theta <- function(phi) c(phi[1], phi[2] - phi[1] / ss$xm)
-            log_j <- function(x){0}
-            lambda <- rust::find_lambda(logf = rust::gpd_logpost,
-                                        ss = ss,
-                                        d = 2,
-                                        min_phi = min_phi,
-                                        max_phi = max_phi,
-                                        phi_to_theta = phi_to_theta,
-                                        log_j = log_j)
+            log_j <- function(x) {
+              0
+            }
+            lambda <- rust::find_lambda(
+              logf = rust::gpd_logpost,
+              ss = ss,
+              d = 2,
+              min_phi = min_phi,
+              max_phi = max_phi,
+              phi_to_theta = phi_to_theta,
+              log_j = log_j
+            )
             gpg <- rust::ru(
               logf = log_postos_partial,
               n = B * nrep,
               d = 2L,
               trans = "BC",
               lambda = lambda,
-              dat = exc,
+              xdat = exc,
               os = os
             )
           }
         }
         pval_eval <- function(pars, stat) {
           if (stat == "reciplik") {
-            stat_fn1(x = exc,
-                     scale = pars[1],
-                     shape = pars[2]) <=
+            stat_fn1(x = exc, scale = pars[1], shape = pars[2]) <=
               stat_fn1(
                 x = revdbayes::rgp(
                   n = length(exc),
@@ -326,7 +343,7 @@ surprise.diag <-
       }
     }
     ret <- list(
-      threshold = u,
+      thresh = u,
       pval = post_pval,
       mean_pval = colMeans(post_pval),
       stat = stat,
@@ -335,6 +352,13 @@ surprise.diag <-
     )
     class(ret) <- "mev_surprise"
     if (plot) {
+      plot(ret)
+    }
+    return(invisible(ret))
+  }
+
+#' @export
+plot.mev_surprise <- function(x, ...){
       if (nrep > 10L) {
         with(
           ret,
@@ -346,14 +370,17 @@ surprise.diag <-
             ylim = c(0, 1),
             yaxs = 'i',
             bty = "l",
-            ylab = paste("Bayesian p-value for", switch(
-              stat,
-              reciplik = "reciprocal likelihood",
-              quantile = "order statistic"
-            ))
+            ylab = paste(
+              "Bayesian p-value for",
+              switch(
+                stat,
+                reciplik = "reciprocal likelihood",
+                quantile = "order statistic"
+              )
+            )
           )
         )
-      } else{
+      } else {
         with(
           ret,
           plot(
@@ -366,14 +393,16 @@ surprise.diag <-
             outline = FALSE,
             yaxs = 'i',
             bty = "l",
-            ylab = paste("Bayesian p-value for\n", switch(
-              stat,
-              reciplik = "reciprocal likelihood",
-              quantile = "order statistic"
-            ))
+            ylab = paste(
+              "Bayesian p-value for\n",
+              switch(
+                stat,
+                reciplik = "reciprocal likelihood",
+                quantile = "order statistic"
+              )
+            )
           )
         )
       }
     }
-    invisible(ret)
   }

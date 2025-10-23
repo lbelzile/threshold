@@ -358,51 +358,44 @@ tstab.bayessurprise <-
   }
 
 #' @export
-plot.mev_surprise <- function(x, ...){
-      if (nrep > 10L) {
-        with(
-          ret,
-          boxplot(
-            pval ~ threshold,
-            panel.first = {
-              abline(a = 0.5, b = 0, col = "grey")
-            },
-            ylim = c(0, 1),
-            yaxs = 'i',
-            bty = "l",
-            ylab = paste(
-              "Bayesian p-value for",
-              switch(
-                stat,
-                reciplik = "reciprocal likelihood",
-                quantile = "order statistic"
-              )
-            )
-          )
+plot.mev_surprise <- function(x, ...) {
+  if (x$nrep > 10L) {
+    boxplot(
+      x$pval ~ x$thresh,
+      panel.first = {
+        abline(a = 0.5, b = 0, col = "grey")
+      },
+      ylim = c(0, 1),
+      yaxs = 'i',
+      bty = "l",
+      ylab = paste(
+        "Bayesian p-value for",
+        switch(
+          x$stat,
+          reciplik = "reciprocal likelihood",
+          quantile = "order statistic"
         )
-      } else {
-        with(
-          ret,
-          plot(
-            x = threshold,
-            y = mean_pval,
-            panel.first = {
-              abline(a = 0.5, b = 0, col = "grey")
-            },
-            ylim = c(0, 1),
-            outline = FALSE,
-            yaxs = 'i',
-            bty = "l",
-            ylab = paste(
-              "Bayesian p-value for\n",
-              switch(
-                stat,
-                reciplik = "reciprocal likelihood",
-                quantile = "order statistic"
-              )
-            )
-          )
+      )
+    )
+  } else {
+    plot(
+      x = x$thresh,
+      y = x$mean_pval,
+      panel.first = {
+        abline(a = 0.5, b = 0, col = "grey")
+      },
+      ylim = c(0, 1),
+      outline = FALSE,
+      yaxs = 'i',
+      bty = "l",
+      ylab = paste(
+        "Bayesian p-value for\n",
+        switch(
+          x$stat,
+          reciplik = "reciprocal likelihood",
+          quantile = "order statistic"
         )
-      }
-    }
+      )
+    )
   }
+}

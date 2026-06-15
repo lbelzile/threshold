@@ -12,18 +12,20 @@ tstab.bayessurprise(
   B = 1000L,
   nrep = 100,
   stat = c("reciplik", "quantile", "rlargest"),
-  os = 1,
+  os = 10,
   plot = TRUE
 )
 }
 \arguments{
 \item{xdat}{[vector] data}
 
+\item{thresh}{[vector] threshold}
+
 \item{type}{[string] type of likelihood, either \code{partial} or \code{posterior}. See the article for references}
 
 \item{prior}{[string] name of prior for the \code{revdbayes} package (default to maximal data information)}
 
-\item{B}{[integer] number of posterior replications (default to 10 000)}
+\item{B}{[integer] number of posterior replications (default to 1000)}
 
 \item{nrep}{[integer] number of replications for the p-value calculation}
 
@@ -32,15 +34,13 @@ tstab.bayessurprise(
 \item{os}{[integer] order statistic for the \code{quantile} statistic. Default to maximum (\code{os=1})}
 
 \item{plot}{[logical] produce a plot of the Bayesian p-value against threshold}
-
-\item{u}{[vector] threshold}
 }
 \value{
 an invisible list with elements
 \describe{
 \item{\code{thresh}}{\code{k} vector of candidate thresholds}
 \item{\code{pval}}{\code{k} by \code{nrep} matrix of p-values}
-\item{\code{mean_pval}}{average p-value for each threshold},
+\item{\code{mean_pval}}{average p-value for each threshold}
 \item{\code{stat}}{string indicating the test statistic}
 \item{\code{type}}{string indicating whether the partial or full posterior are used}
 \item{\code{nrep}}{integer number of replication}

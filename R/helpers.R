@@ -19,15 +19,13 @@ simulate_parametric <- function(
   model,
   rounding = 0,
   seed = NULL,
-  # nobs = 1000L,
-  # p = 0.5,
   ar = 0
 ) {
   stopifnot(
     is.numeric(rounding),
     is.finite(rounding),
     length(rounding) == 1L,
-    rounding < 1,
+    rounding < 5,
     rounding >= 0
   )
   stopifnot(
@@ -86,12 +84,37 @@ simulate_parametric <- function(
     #  and this in turn gives shape estimates of -1...
     # Instead, map the 95% to 100, then round to 0.1 or 0.5
     # and back-transform
-    args$p <- 0.95
-    hquant <- 100 / do.call(paste0("q", family), args = args)
+    hquant <- 100 / do.call(paste0("q", family), args = c(args, p = 0.90))
     round_fn <- function(x, c) {
-      floor(x / c) * c + 0.5 * c
+      ceiling(x / c) * c
     }
+    # dat <- round_fn(hquant * dat, c = rounding)
     dat <- round_fn(hquant * dat, c = rounding) / hquant
+    #
+    # shape1 <- 2
+    # shape2 <- 0.75
+    # rounding <- rounding * 0.01
+    # ru <- pbeta(
+    #   round(rbeta(n, shape1, shape2) / rounding) * rounding,
+    #   shape1,
+    #   shape2
+    # )
+    # test <- sort(
+    #   do.call(paste0("q", family), args = c(args, list(p = ru))),
+    #   decreasing = TRUE
+    # )
+    # p80 <- floor(n / 5)
+    # length(unique(test[1:p80])) / p80
+    # plot(
+    #   y = sort(test),
+    #   x = do.call(
+    #     paste0("q", family),
+    #     args = c(args, list(p = ppoints(n)))
+    #   ),
+    #   panel.first = {
+    #     abline(a = 0, b = 1)
+    #   }
+    # )
   }
   return(dat)
 }

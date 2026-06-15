@@ -6,7 +6,7 @@
 \alias{qft}
 \alias{pft}
 \alias{rft}
-\title{Folded student}
+\title{Folded student distribution}
 \usage{
 dft(x, df, log = FALSE)
 

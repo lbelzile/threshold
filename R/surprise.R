@@ -13,9 +13,9 @@
 #'
 #' @export
 #' @param xdat [vector] data
-#' @param u [vector] threshold
+#' @param thresh [vector] threshold
 #' @param prior [string] name of prior for the \code{revdbayes} package (default to maximal data information)
-#' @param B [integer] number of posterior replications (default to 10 000)
+#' @param B [integer] number of posterior replications (default to 1000)
 #' @param nrep [integer] number of replications for the p-value calculation
 #' @param stat [string] the statistic, either reciprocal likelihood (\code{reciplik}) or jth empirical quantile(\code{quantile})
 #' @param os [integer] order statistic for the \code{quantile} statistic. Default to maximum (\code{os=1})
@@ -25,7 +25,7 @@
 #' \describe{
 #' \item{\code{thresh}}{\code{k} vector of candidate thresholds}
 #' \item{\code{pval}}{\code{k} by \code{nrep} matrix of p-values}
-#' \item{\code{mean_pval}}{average p-value for each threshold},
+#' \item{\code{mean_pval}}{average p-value for each threshold}
 #' \item{\code{stat}}{string indicating the test statistic}
 #' \item{\code{type}}{string indicating whether the partial or full posterior are used}
 #' \item{\code{nrep}}{integer number of replication}
@@ -39,20 +39,29 @@ tstab.bayessurprise <-
     B = 1e3L,
     nrep = 100,
     stat = c("reciplik", "quantile", "rlargest"),
-    os = 1,
+    os = 10,
     plot = TRUE
   ) {
-    stopifnot(
-      "Data is not a vector" = is.vector(xdat),
-      "Threshold is not a vector" = is.vector(u),
-      "Threshold is negative" = isTRUE(all(u >= 0)),
-      "Threshold exceeds maximum observation" = max(xdat) > max(u)
-    )
-    u <- sort(u)
+    if (!requireNamespace("revdbayes", quietly = TRUE)) {
+      warning("\"revdbayes\" package is not installed.")
+      return(invisible(NULL))
+    }
+    if (!requireNamespace("rust", quietly = TRUE)) {
+      warning("\"rust\" package is not installed.")
+      return(invisible(NULL))
+    }
+    u <- sort(thresh)
     xdat <- sort(xdat)
     stat <- match.arg(stat)
     type <- match.arg(type)
     os <- as.integer(os)
+    stopifnot(
+      "Data is not a vector" = is.vector(xdat),
+      "Threshold is not a vector" = is.vector(u),
+      "Threshold is negative" = isTRUE(u[1] >= 0),
+      "Threshold exceeds maximum observation" = xdat[length(xdat)] >
+        u[length(u)]
+    )
 
     dallosgp <- function(y, scale, shape, k, log = TRUE) {
       stopifnot(length(scale) == 1L, length(shape) == 1L, k > 0, k < length(y))
@@ -368,6 +377,7 @@ plot.mev_surprise <- function(x, ...) {
       ylim = c(0, 1),
       yaxs = 'i',
       bty = "l",
+      xlab = "threshold",
       ylab = paste(
         "Bayesian p-value for",
         switch(
@@ -388,6 +398,7 @@ plot.mev_surprise <- function(x, ...) {
       outline = FALSE,
       yaxs = 'i',
       bty = "l",
+      xlab = "threshold",
       ylab = paste(
         "Bayesian p-value for\n",
         switch(

@@ -28,37 +28,52 @@
 #'     ylab = "distribution function",
 #'     main = "Weibull-GP mixture",
 #'     type = "l")
-prjbmixt <- function(q, kappa, beta,
-                     sigma, xi, u, eps,
-                     lower.tail = TRUE){
+prjbmixt <- function(q, kappa, beta, sigma, xi, u, eps, lower.tail = TRUE) {
   # Compute cumulative hazard and return survival function
-  H1 <- function(x){
-    beta^(-kappa)*x^kappa
+  H1 <- function(x) {
+    beta^(-kappa) * x^kappa
   }
-  H2 <- function(x){
-    1/xi*log1p(pmax(0,xi*(x-u)/sigma))
+  H2 <- function(x) {
+    1 / xi * log1p(pmax(0, xi * (x - u) / sigma))
   }
   # Numerical integration using Sage
-  Ht <- function(x){
-    kappa*(beta*(x/beta)^kappa/kappa - 3*beta*u^2*(x/beta)^kappa/(eps^2*kappa) -
-             2*beta*u^3*(x/beta)^kappa/(eps^3*kappa) +
-             6*beta^(-kappa + 1)*u*x^(kappa + 1)/(eps^2*(kappa + 1)) +
-             6*beta^(-kappa + 1)*u^2*x^(kappa + 1)/(eps^3*(kappa + 1)) -
-             3*beta^(-kappa + 1)*x^(kappa + 2)/(eps^2*(kappa + 2)) -
-             6*beta^(-kappa + 1)*u*x^(kappa + 2)/(eps^3*(kappa + 2)) +
-             2*beta^(-kappa + 1)*x^(kappa + 3)/(eps^3*(kappa + 3)))/beta +
-      1/6*(3*(3*eps + 4*u)*x^2 - 4*x^3- 6*(3*eps*u + 2*u^2)*x)/(eps^3*sigma*xi)
+  Ht <- function(x) {
+    kappa *
+      (beta *
+        (x / beta)^kappa /
+        kappa -
+        3 * beta * u^2 * (x / beta)^kappa / (eps^2 * kappa) -
+        2 * beta * u^3 * (x / beta)^kappa / (eps^3 * kappa) +
+        6 * beta^(-kappa + 1) * u * x^(kappa + 1) / (eps^2 * (kappa + 1)) +
+        6 * beta^(-kappa + 1) * u^2 * x^(kappa + 1) / (eps^3 * (kappa + 1)) -
+        3 * beta^(-kappa + 1) * x^(kappa + 2) / (eps^2 * (kappa + 2)) -
+        6 * beta^(-kappa + 1) * u * x^(kappa + 2) / (eps^3 * (kappa + 2)) +
+        2 * beta^(-kappa + 1) * x^(kappa + 3) / (eps^3 * (kappa + 3))) /
+      beta +
+      1 /
+        6 *
+        (3 *
+          (3 * eps + 4 * u) *
+          x^2 -
+          4 * x^3 -
+          6 * (3 * eps * u + 2 * u^2) * x) /
+        (eps^3 * sigma * xi)
   }
   H1_u <- H1(u)
   Ht_u <- Ht(u)
   Ht_upe <- Ht(u + eps)
-  survvec <- ifelse(q <= u, exp(-H1(q)),
-                    ifelse(u < q & q < u+eps,
-                           exp(-(H1_u + Ht(q) - Ht_u)),
-                           exp(-(H1_u + Ht_upe - Ht_u + H2(q)))))
-  if(lower.tail){
-    return(1-survvec)
-  } else{
+  survvec <- ifelse(
+    q <= u,
+    exp(-H1(q)),
+    ifelse(
+      u < q & q < u + eps,
+      exp(-(H1_u + Ht(q) - Ht_u)),
+      exp(-(H1_u + Ht_upe - Ht_u + H2(q)))
+    )
+  )
+  if (lower.tail) {
+    return(1 - survvec)
+  } else {
     return(survvec)
   }
 }
@@ -72,21 +87,28 @@ prjbmixt <- function(q, kappa, beta,
 #' @references Roth, Jongbloef, Buishand (2016), \emph{Threshold selection for regional peaks-over-threshold data}, Journal of Applied Statistics
 #' @keywords internal
 #' @export
-rrjbmixt <- function(n, kappa, beta,
-                     sigma, xi, u, eps){
-  sapply(runif(n), function(ui){
-    uniroot(f = function(x){
-      prjbmixt(x, kappa = kappa,
-               beta = beta,
-               sigma = sigma,
-               xi = xi,
-               u = u,
-               eps = eps) - ui},
+rrjbmixt <- function(n, kappa, beta, sigma, xi, u, eps) {
+  sapply(runif(n), function(ui) {
+    uniroot(
+      f = function(x) {
+        prjbmixt(
+          x,
+          kappa = kappa,
+          beta = beta,
+          sigma = sigma,
+          xi = xi,
+          u = u,
+          eps = eps
+        ) -
+          ui
+      },
       lower = 0,
-      upper = 1e10)$root})
+      upper = 1e10
+    )$root
+  })
 }
 
-#' Folded student
+#' Folded student distribution
 #' @name ft
 #' @description Density, distribution function, quantile function and random generation for the Student-t distribution with \code{df} degrees of freedom.
 #' @param x vector of quantiles.
@@ -101,47 +123,44 @@ NULL
 
 #' @describeIn ft density
 #' @export
-dft <- function(x, df, log = FALSE){
-  if(!log){
-    2*dt(x = ifelse(x < 0, -Inf, x), df = df)
-  } else{
-    log(2) + dt(x = ifelse(x < 0, -Inf, x),
-                df = df, log = TRUE)
+dft <- function(x, df, log = FALSE) {
+  if (!log) {
+    2 * dt(x = ifelse(x < 0, -Inf, x), df = df)
+  } else {
+    log(2) + dt(x = ifelse(x < 0, -Inf, x), df = df, log = TRUE)
   }
 }
 
 #' @describeIn ft density
 #' @export
-qft <- function(p, df, lower.tail = TRUE, log.p = FALSE){
-  if(log.p){
+qft <- function(p, df, lower.tail = TRUE, log.p = FALSE) {
+  if (log.p) {
     p <- exp(p)
   }
-  if(!lower.tail){
-    p <- 1 - p/2
-  } else{
-    p <- 0.5 + p/2
+  if (!lower.tail) {
+    p <- 1 - p / 2
+  } else {
+    p <- 0.5 + p / 2
   }
-  qt(p, df = df, lower.tail = lower.tail,
-     log.p = FALSE)
+  qt(p, df = df, lower.tail = lower.tail, log.p = FALSE)
 }
 
 #' @describeIn ft density
 #' @export
-pft <- function(q, df, lower.tail = TRUE, log.p = FALSE){
-  p <- 2*(pt(q = q, df = df, lower.tail = TRUE,
-             log.p = FALSE) - 0.5)
-  if(!lower.tail){
+pft <- function(q, df, lower.tail = TRUE, log.p = FALSE) {
+  p <- 2 * (pt(q = q, df = df, lower.tail = TRUE, log.p = FALSE) - 0.5)
+  if (!lower.tail) {
     p <- 1 - p
   }
-  if(log.p){
+  if (log.p) {
     return(log(p))
-  } else{
+  } else {
     return(p)
   }
 }
 
 #' @describeIn ft density
 #' @export
-rft <- function(n, df){
+rft <- function(n, df) {
   abs(rt(n = n, df = df))
 }

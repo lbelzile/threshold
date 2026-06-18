@@ -39,7 +39,7 @@ tstab.bayessurprise <-
     B = 1e3L,
     nrep = 100,
     stat = c("reciplik", "quantile", "rlargest"),
-    os = 10,
+    os = 1,
     plot = TRUE
   ) {
     if (!requireNamespace("revdbayes", quietly = TRUE)) {
